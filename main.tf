@@ -1,29 +1,90 @@
-# Generate Private key
-resource "tls_private_key" "test_key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
+# # Generate Private key
+# resource "tls_private_key" "test_key" {
+#   algorithm = "RSA"
+#   rsa_bits  = 4096
+# }
+
+# # upload public to aws
+# resource "aws_key_pair" "public_key" {
+#   key_name   = var.key_name
+#   public_key = tls_private_key.test_key.public_key_openssh
+# }
+
+# # Create a local file for the private key
+# resource "local_sensitive_file" "private_key" {
+#   filename        = var.private_key_file_path
+#   content         = tls_private_key.test_key.private_key_pem
+#   file_permission = 0600
+# }
+
+resource "aws_iam_role" "ec2_ssm_role" {
+  name = "cal-com-ec2-ssm-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
 }
 
-# upload public to aws
-resource "aws_key_pair" "public_key" {
-  key_name   = var.key_name
-  public_key = tls_private_key.test_key.public_key_openssh
+resource "aws_iam_role_policy_attachment" "ssm_core" {
+  role       = aws_iam_role.ec2_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# Create a local file for the private key
-resource "local_sensitive_file" "private_key" {
-  filename        = var.private_key_file_path
-  content         = tls_private_key.test_key.private_key_pem
-  file_permission = 0600
+resource "aws_iam_instance_profile" "ec2_profile" {
+  role = aws_iam_role.ec2_ssm_role.name
 }
 
 
 resource "aws_instance" "cal_com" {
-  ami                         = var.ami_id
-  instance_type               = var.instance_type
-  vpc_security_group_ids      = [aws_security_group.cal_sg.id]
-  key_name                    = aws_key_pair.public_key.key_name
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  vpc_security_group_ids = [aws_security_group.cal_sg.id]
+  # key_name                    = aws_key_pair.public_key.key_name
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
   associate_public_ip_address = true
+
+  user_data = <<-EOF
+    #!/bin/bash
+    set -e
+    
+    # Update to latest version:
+    sudo yum update -y
+
+    # Install Docker
+    sudo yum install docker -y
+
+    # Enable Docker
+    sudo systemctl enable docker
+
+    # Start Docker
+    sudo systemctl start docker
+
+    # Run Docker without sudo
+    sudo usermod -aG docker ec2-user
+
+    # Install Docker Compose on EC2
+    sudo curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" \
+    -o /usr/local/bin/docker-compose
+
+    # Make this file executable
+    sudo chmod +x /usr/local/bin/docker-compose
+
+    # Install Git
+    sudo yum install git -y
+   
+    # Clone the git repo cal.com
+    git clone https://github.com/calcom/cal.com
+    cd cal.com
+    cp .env.example .env
+    
+  EOF
   tags = {
     Name = var.instance_name
   }
