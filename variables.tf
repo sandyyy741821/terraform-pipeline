@@ -2,9 +2,9 @@ variable "aws_region" {
   type = string
 }
 
-variable "assume_role" {
-  type = string
-}
+# variable "assume_role" {
+#   type = string
+# }
 
 variable "ami_id" {
   type = string
