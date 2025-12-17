@@ -1,0 +1,16 @@
+name: Destroy Terraform
+
+on: 
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Terraform Destroy
+        run: terraform destroy
