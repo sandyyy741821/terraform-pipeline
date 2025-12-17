@@ -22,6 +22,7 @@ jobs:
       TF_VAR_instance_name: cal-com
       TF_VAR_security_group_name: cal-sg
       TF_VAR_key_name: test-key
+      TF_VAR_assume_role: arn:aws:iam::${{ secrets.Account_ID}}:role/TerraformBootstrapRole
 
       # ingress_rules as JSON
       TF_VAR_ingress_rules: >
