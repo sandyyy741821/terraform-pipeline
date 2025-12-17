@@ -18,3 +18,5 @@ terraform.rc
 # OS files
 .DS_Store
 Thumbs.db
+
+# .terraform.lock.hcl
