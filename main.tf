@@ -83,6 +83,14 @@ resource "aws_instance" "cal_com" {
     git clone https://github.com/calcom/cal.com
     cd cal.com
     cp .env.example .env
+
+    # Install and start Nginx
+    sudo yum install nginx -y
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
+    
+    # Install cert bot
+    sudo yum install certbot python3-certbot-nginx -y
     
   EOF
   tags = {

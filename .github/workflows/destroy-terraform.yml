@@ -27,6 +27,9 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.Account_ID }}:role/GitHubTerraformRole
           aws-region: eu-north-1
 
+      - name: Terraform Init
+        run: terraform init -reconfigure
+
       - name: Terraform Destroy
         run: terraform destroy
 
