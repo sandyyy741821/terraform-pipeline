@@ -11,6 +11,39 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
 
+    env:
+      TF_VAR_aws_region: eu-north-1
+      TF_VAR_ami_id: ami-0b46816ffa1234887
+      TF_VAR_instance_type: t3.micro
+      TF_VAR_vpc_id: vpc-0391cb4eb38e57302      
+      TF_VAR_instance_name: cal-com
+      TF_VAR_security_group_name: cal-sg
+      TF_VAR_key_name: test-key
+      TF_VAR_assume_role: arn:aws:iam::${{ secrets.Account_ID}}:role/TerraformBootstrapRole
+
+      # ingress_rules as JSON
+      TF_VAR_ingress_rules: >
+        [
+          {
+            "from_port": 3000,
+            "to_port": 3000,
+            "protocol": "tcp",
+            "cidr": "0.0.0.0/0"
+          },
+          {
+            "from_port": 443,
+            "to_port": 443,
+            "protocol": "tcp",
+            "cidr": "0.0.0.0/0"
+          },
+          {
+            "from_port": 80,
+            "to_port": 80,
+            "protocol": "tcp",
+            "cidr": "0.0.0.0/0"
+          }
+        ]
+
     steps:
 
       - name: Checkout code
