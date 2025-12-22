@@ -63,6 +63,9 @@ jobs:
       - name: Terraform Init
         run: terraform init -reconfigure
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Check Terraform state lock
         id: lock
         run: |
@@ -81,6 +84,9 @@ jobs:
             echo "No Terraform lock found"
           fi
 
+      - name: Force unlock Terraform state
+        if: steps.lock.outputs.lock_id != ''
+        run: terraform force-unlock -force ${{ steps.lock.outputs.lock_id }}
 
       - name: Terraform Destroy
         run: terraform destroy --auto-approve
