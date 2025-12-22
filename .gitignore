@@ -19,4 +19,4 @@ terraform.rc
 .DS_Store
 Thumbs.db
 
-# .terraform.lock.hcl
+.terraform.lock.hcl

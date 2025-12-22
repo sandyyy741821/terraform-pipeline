@@ -63,7 +63,26 @@ jobs:
       - name: Terraform Init
         run: terraform init -reconfigure
 
+      - name: Check Terraform state lock
+        id: lock
+        run: |
+          ITEM=$(aws dynamodb get-item \
+            --table-name terraform-locks \
+            --key '{
+              "LockID": { "S": "terraform-state-file-maintenance/ec2/terraform.tfstate" }
+            }')
+
+          LOCK_ID=$(echo "$ITEM" | jq -r '.Item.Info.S // empty | fromjson? | .ID')
+
+          if [ -n "$LOCK_ID" ]; then
+            echo "Terraform state is locked: $LOCK_ID"
+            echo "lock_id=$LOCK_ID" >> $GITHUB_OUTPUT
+          else
+            echo "No Terraform lock found"
+          fi
+
+
       - name: Terraform Destroy
-        run: terraform destroy
+        run: terraform destroy --auto-approve
 
       
